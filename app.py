@@ -116,7 +116,7 @@ REGLAS ACCIONABLES DEL CONTRATO PEDAGÓGICO:
 """
 
 # -------------------------------------------------------------------
-# AUTENTICACIÓN Y SELECCIÓN DINÁMICA DE MODELO
+# AUTENTICACIÓN Y SELECCIÓN DE MODELO
 # -------------------------------------------------------------------
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
@@ -127,31 +127,27 @@ if not api_key:
 if api_key:
     genai.configure(api_key=api_key)
 
-    # Función para obtener el modelo Gemini disponible
     def get_working_model():
+        # Intentar obtener modelos dinámicamente
         try:
             available_models = [
                 m.name for m in genai.list_models() 
                 if "generateContent" in m.supported_generation_methods
             ]
-            # Priorizar modelos Flash disponibles
             for m in available_models:
-                if "flash" in m and "vision" not in m:
+                if "2.0" in m or "1.5" in m:
                     return genai.GenerativeModel(model_name=m, system_instruction=SYSTEM_PROMPT)
-            if available_models:
-                return genai.GenerativeModel(model_name=available_models[0], system_instruction=SYSTEM_PROMPT)
         except Exception:
             pass
         
-        # Lista de reserva en caso de fallo al listar
-        fallback_models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
+        # Probar modelos específicos en orden de disponibilidad
+        fallback_models = ["gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]
         for target in fallback_models:
             try:
-                m = genai.GenerativeModel(model_name=target, system_instruction=SYSTEM_PROMPT)
-                return m
+                return genai.GenerativeModel(model_name=target, system_instruction=SYSTEM_PROMPT)
             except Exception:
                 continue
-        return genai.GenerativeModel(model_name="gemini-2.5-flash", system_instruction=SYSTEM_PROMPT)
+        return genai.GenerativeModel(model_name="gemini-2.0-flash", system_instruction=SYSTEM_PROMPT)
 
     model = get_working_model()
 

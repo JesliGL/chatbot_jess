@@ -82,6 +82,11 @@ if api_key:
                 "content": "¡Hola! 👋 Soy **ChatbotJESS**, tu tutora de Ciencias Naturales. ¿Qué ejemplo o caso de cadena alimenticia estás analizando hoy?",
             }
         ]
+    # Mostrar mensajes del historial
+for message in st.session_state.messages:
+    avatar_p = "avatar.png" if message["role"] == "assistant" else None
+    with st.chat_message(message["role"], avatar=avatar_p):
+        st.markdown(message["content"])
 
     # Mostrar mensajes en pantalla
     for message in st.session_state.messages:
@@ -96,7 +101,7 @@ if api_key:
             st.markdown(prompt)
 
         # Generar respuesta tutora
-        with st.chat_message("assistant"):
+        with st.chat_message("assistant", avatar="avatar.png"):
             message_placeholder = st.empty()
             try:
                 # Convertir historial al formato compatible con la API

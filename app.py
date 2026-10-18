@@ -24,15 +24,20 @@ st.markdown("""
         padding-top: 1rem;
     }
 
-    /* Agrandar SOLO la foto del avatar */
+    /* Espacio inferior para evitar solapamiento */
+    .main .block-container {
+        padding-bottom: 120px !important;
+    }
+
+    /* Tamaño del avatar de la tutora */
     [data-testid="stChatMessageAvatar"] img {
-        width: 60px !important;
-        height: 60px !important;
+        width: 55px !important;
+        height: 55px !important;
         border-radius: 50% !important;
         object-fit: cover !important;
     }
 
-    /* Alineación de los mensajes */
+    /* Alineación del chat */
     [data-testid="stChatMessage"] {
         align-items: flex-start !important;
     }
@@ -77,7 +82,7 @@ with st.sidebar:
 st.markdown('<h1><span class="shooting-star-icon">💫</span> ChatbotJESS: Tutora de Ciencias Naturales</h1>', unsafe_allow_html=True)
 st.caption("Asistente educativo con IA para 8.º de EGB Superior | Nivel: Cadenas Alimenticias y Redes Tróficas")
 
-# Advertencia DUA (Cerrado por defecto para ahorrar espacio)
+# Advertencia DUA (Cerrado por defecto)
 with st.expander("ℹ️ Información importante y reglas de uso (Transparencia)", expanded=False):
     st.markdown("""
     - **Propósito:** Guiarte a pensar y descubrir las respuestas por ti mismo/a.
@@ -94,7 +99,7 @@ Eres ChatbotJESS, una tutora virtual de Ciencias Naturales para estudiantes de 8
 Especialidad: Niveles Tróficos, Cadenas Alimenticias y Desequilibrios Ecológicos.
 
 ROL Y PRINCIPIOS DUA (Diseño Universal para el Aprendizaje):
-- Lenguaje muy claro, amable, cercano, empático, paciente y highly motivador.
+- Lenguaje muy claro, amable, cercano, empático, paciente y altamente motivador.
 - Usa párrafos cortos, viñetas, negritas y emojis para facilitar la lectura.
 
 RESTRICCIÓN DE LONGITUD DE RESPUESTA:
@@ -121,7 +126,12 @@ if not api_key:
 
 if api_key:
     genai.configure(api_key=api_key)
-    model = genai.GenerativeModel(model_name="gemini-1.5-flash", system_instruction=SYSTEM_PROMPT)
+    
+    # Intentar usar el nombre de modelo actualizado de Google Gemini
+    try:
+        model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest", system_instruction=SYSTEM_PROMPT)
+    except Exception:
+        model = genai.GenerativeModel(model_name="gemini-1.5-pro", system_instruction=SYSTEM_PROMPT)
 
     # Inicializar historial de conversación
     if "messages" not in st.session_state:
@@ -132,7 +142,7 @@ if api_key:
             }
         ]
 
-    # Mostrar el historial de mensajes de manera limpia
+    # Mostrar el historial de mensajes
     for message in st.session_state.messages:
         avatar_p = "avatar.png" if message["role"] == "assistant" else None
         with st.chat_message(message["role"], avatar=avatar_p):
@@ -140,12 +150,10 @@ if api_key:
 
     # Entrada de texto del estudiante
     if prompt := st.chat_input("Escribe tu consulta o respuesta aquí..."):
-        # Guardar y mostrar mensaje del usuario
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Generar respuesta de la tutora
         with st.chat_message("assistant", avatar="avatar.png"):
             message_placeholder = st.empty()
             try:

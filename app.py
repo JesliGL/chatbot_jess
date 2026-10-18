@@ -116,7 +116,7 @@ REGLAS ACCIONABLES DEL CONTRATO PEDAGÓGICO:
 """
 
 # -------------------------------------------------------------------
-# AUTENTICACIÓN Y SELECCIÓN DE MODELO
+# AUTENTICACIÓN Y CONFIGURACIÓN DE GEMINI API
 # -------------------------------------------------------------------
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
@@ -127,29 +127,8 @@ if not api_key:
 if api_key:
     genai.configure(api_key=api_key)
 
-    def get_working_model():
-        # Intentar obtener modelos dinámicamente
-        try:
-            available_models = [
-                m.name for m in genai.list_models() 
-                if "generateContent" in m.supported_generation_methods
-            ]
-            for m in available_models:
-                if "2.0" in m or "1.5" in m:
-                    return genai.GenerativeModel(model_name=m, system_instruction=SYSTEM_PROMPT)
-        except Exception:
-            pass
-        
-        # Probar modelos específicos en orden de disponibilidad
-        fallback_models = ["gemini-2.0-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro"]
-        for target in fallback_models:
-            try:
-                return genai.GenerativeModel(model_name=target, system_instruction=SYSTEM_PROMPT)
-            except Exception:
-                continue
-        return genai.GenerativeModel(model_name="gemini-2.0-flash", system_instruction=SYSTEM_PROMPT)
-
-    model = get_working_model()
+    # Modelo solicitado explícitamente por el servidor de Google
+    model = genai.GenerativeModel(model_name="gemini-3.8-flash", system_instruction=SYSTEM_PROMPT)
 
     # Inicializar historial de conversación
     if "messages" not in st.session_state:

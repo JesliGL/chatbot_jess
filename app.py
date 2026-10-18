@@ -3,7 +3,7 @@ import google.generativeai as genai
 import streamlit as st
 
 # -------------------------------------------------------------------
-# CONFIGURACIÓN DE LA PÁGINA (DUA: Accesible, claro y estructurado)
+# CONFIGURACIÓN DE LA PÁGINA
 # -------------------------------------------------------------------
 st.set_page_config(
     page_title="ChatbotJESS - Tutora de Ciencias Naturales",
@@ -12,7 +12,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Estilos personalizados para la barra lateral, títulos y avatares grandes
+# Estilos CSS personalizados
 st.markdown("""
     <style>
     /* Ocultar barra superior por defecto de Streamlit */
@@ -24,17 +24,15 @@ st.markdown("""
         padding-top: 1rem;
     }
 
-    /* Agrandar SOLO la foto del avatar sin apretar el texto del mensaje */
+    /* Agrandar SOLO la foto del avatar */
     [data-testid="stChatMessageAvatar"] img {
-        width: 65px !important;
-        height: 65px !important;
-        max-width: 65px !important;
-        max-height: 65px !important;
+        width: 60px !important;
+        height: 60px !important;
         border-radius: 50% !important;
         object-fit: cover !important;
     }
 
-    /* Ajustar el alineamiento vertical del chat */
+    /* Alineación de los mensajes */
     [data-testid="stChatMessage"] {
         align-items: flex-start !important;
     }
@@ -56,7 +54,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -------------------------------------------------------------------
-# BARRA LATERAL (SIDEBAR - IZQUIERDA CON LA TUTORA)
+# BARRA LATERAL (SIDEBAR)
 # -------------------------------------------------------------------
 with st.sidebar:
     try:
@@ -72,15 +70,15 @@ with st.sidebar:
     st.markdown("🔬 Cadenas Alimenticias y Redes Tróficas")
 
 # -------------------------------------------------------------------
-# CONTENIDO PRINCIPAL (DERECHA)
+# CONTENIDO PRINCIPAL
 # -------------------------------------------------------------------
 
 # Título principal con la estrella animada
 st.markdown('<h1><span class="shooting-star-icon">💫</span> ChatbotJESS: Tutora de Ciencias Naturales</h1>', unsafe_allow_html=True)
 st.caption("Asistente educativo con IA para 8.º de EGB Superior | Nivel: Cadenas Alimenticias y Redes Tróficas")
 
-# Advertencia DUA y Contrato Pedagógico visible para el estudiante
-with st.expander("ℹ️ Información importante y reglas de uso (Transparencia)"):
+# Advertencia DUA (Cerrado por defecto para ahorrar espacio)
+with st.expander("ℹ️ Información importante y reglas de uso (Transparencia)", expanded=False):
     st.markdown("""
     - **Propósito:** Guiarte a pensar y descubrir las respuestas por ti mismo/a.
     - **Límite de la IA:** Este es un asistente conversacional basado en IA. **No dará respuestas directas de tus tareas** ni reemplaza a tu docente.
@@ -96,19 +94,19 @@ Eres ChatbotJESS, una tutora virtual de Ciencias Naturales para estudiantes de 8
 Especialidad: Niveles Tróficos, Cadenas Alimenticias y Desequilibrios Ecológicos.
 
 ROL Y PRINCIPIOS DUA (Diseño Universal para el Aprendizaje):
-- Lenguaje muy claro, amable, cercano, empático, paciente y altamente motivador.
-- Usa párrafos cortos, viñetas, negritas y emojis para facilitar la lectura y comprensión multimodal.
+- Lenguaje muy claro, amable, cercano, empático, paciente y highly motivador.
+- Usa párrafos cortos, viñetas, negritas y emojis para facilitar la lectura.
 
 RESTRICCIÓN DE LONGITUD DE RESPUESTA:
 - Cada respuesta debe ser breve y concisa, de MÁXIMO 100 PALABRAS por interacción.
 
 REGLAS ACCIONABLES DEL CONTRATO PEDAGÓGICO:
-1. RECHAZAR Y NO DAR SOLUCIONES DIRECTAS: Jamás des la clasificación resuelta, la lista completa ni la tarea hecha. Si te piden la respuesta, rechaza amablemente indicando que tu función es enseñarle a razonar.
-2. PREGUNTAR Y DAR PISTAS: Ante dudas sobre la función o impacto de una especie, ofrece una PISTA simple sobre la dieta u origen de energía (ej. "¿De dónde obtiene su energía una planta?").
-3. EXPLICAR ERRORES: Si el estudiante se equivoca, explica el concepto de manera sencilla y sin desanimarlo.
-4. MANEJAR AMBIGÜEDADES / DERIVAR AL DOCENTE: Si el estudiante responde con ambigüedad repetida o muestra confusión constante, indícale amablemente que debe consultar directamente con su docente para revisar la ruta de aprendizaje.
-5. CIERRE OBLIGATORIO: Toda interacción DEBE terminar con una pregunta abierta reflexiva para hacer pensar al estudiante.
-6. CIENTIFICIDAD Y FUENTES: Basado exclusivamente en ecología real (SciELO, Redalyc, Scopus). Si solicita fuentes o justificaciones científicas, cita artículos/libros ecológicos reales con su código DOI o autor real.
+1. RECHAZAR Y NO DAR SOLUCIONES DIRECTAS: Jamás des la clasificación resuelta ni la tarea hecha.
+2. PREGUNTAR Y DAR PISTAS: Ante dudas sobre la función de una especie, ofrece una PISTA simple.
+3. EXPLICAR ERRORES: Explica los conceptos de manera sencilla.
+4. MANEJAR AMBIGÜEDADES: Si hay confusión constante, deriva amablemente al docente.
+5. CIERRE OBLIGATORIO: Toda interacción DEBE terminar con una pregunta abierta reflexiva.
+6. CIENTIFICIDAD: Basado exclusivamente en ecología real.
 7. SIN ESPECIES FICTICIAS: No inventes seres vivos irreales.
 """
 
@@ -120,13 +118,12 @@ api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 if not api_key:
     st.sidebar.header("🔐 Configuración de la API")
     api_key = st.sidebar.text_input("Ingresa tu Gemini API Key aquí:", type="password")
-    st.sidebar.info("Obtén tu clave gratuita en Google AI Studio para activar a ChatbotJESS.")
 
 if api_key:
     genai.configure(api_key=api_key)
     model = genai.GenerativeModel(model_name="gemini-1.5-flash", system_instruction=SYSTEM_PROMPT)
 
-    # Inicializar historial
+    # Inicializar historial de conversación
     if "messages" not in st.session_state:
         st.session_state.messages = [
             {
@@ -135,7 +132,7 @@ if api_key:
             }
         ]
 
-    # Mostrar mensajes del historial con avatar correcto
+    # Mostrar el historial de mensajes de manera limpia
     for message in st.session_state.messages:
         avatar_p = "avatar.png" if message["role"] == "assistant" else None
         with st.chat_message(message["role"], avatar=avatar_p):
@@ -143,10 +140,12 @@ if api_key:
 
     # Entrada de texto del estudiante
     if prompt := st.chat_input("Escribe tu consulta o respuesta aquí..."):
+        # Guardar y mostrar mensaje del usuario
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
+        # Generar respuesta de la tutora
         with st.chat_message("assistant", avatar="avatar.png"):
             message_placeholder = st.empty()
             try:

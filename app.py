@@ -24,18 +24,17 @@ st.markdown("""
         padding-top: 1rem;
     }
 
-    /* Agrandar el avatar de la tutora en el chat a 70px */
-    [data-testid="stChatMessageAvatar"], 
-    [data-testid="stChatMessageAvatar"] img,
-    div[data-testid="stChatMessage"] div[width] {
-        width: 70px !important;
-        height: 70px !important;
-        min-width: 70px !important;
-        min-height: 70px !important;
+    /* Agrandar SOLO la foto del avatar sin apretar el texto del mensaje */
+    [data-testid="stChatMessageAvatar"] img {
+        width: 65px !important;
+        height: 65px !important;
+        max-width: 65px !important;
+        max-height: 65px !important;
         border-radius: 50% !important;
         object-fit: cover !important;
     }
 
+    /* Ajustar el alineamiento vertical del chat */
     [data-testid="stChatMessage"] {
         align-items: flex-start !important;
     }

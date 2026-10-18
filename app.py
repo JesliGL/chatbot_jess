@@ -116,7 +116,7 @@ REGLAS ACCIONABLES DEL CONTRATO PEDAGÓGICO:
 """
 
 # -------------------------------------------------------------------
-# AUTENTICACIÓN Y CONFIGURACIÓN DE GEMINI API
+# AUTENTICACIÓN Y SELECCIÓN DINÁMICA DE MODELO
 # -------------------------------------------------------------------
 api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
@@ -126,12 +126,34 @@ if not api_key:
 
 if api_key:
     genai.configure(api_key=api_key)
-    
-    # Intentar usar el nombre de modelo actualizado de Google Gemini
-    try:
-        model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest", system_instruction=SYSTEM_PROMPT)
-    except Exception:
-        model = genai.GenerativeModel(model_name="gemini-1.5-pro", system_instruction=SYSTEM_PROMPT)
+
+    # Función para obtener el modelo Gemini disponible
+    def get_working_model():
+        try:
+            available_models = [
+                m.name for m in genai.list_models() 
+                if "generateContent" in m.supported_generation_methods
+            ]
+            # Priorizar modelos Flash disponibles
+            for m in available_models:
+                if "flash" in m and "vision" not in m:
+                    return genai.GenerativeModel(model_name=m, system_instruction=SYSTEM_PROMPT)
+            if available_models:
+                return genai.GenerativeModel(model_name=available_models[0], system_instruction=SYSTEM_PROMPT)
+        except Exception:
+            pass
+        
+        # Lista de reserva en caso de fallo al listar
+        fallback_models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-2.0-flash"]
+        for target in fallback_models:
+            try:
+                m = genai.GenerativeModel(model_name=target, system_instruction=SYSTEM_PROMPT)
+                return m
+            except Exception:
+                continue
+        return genai.GenerativeModel(model_name="gemini-2.5-flash", system_instruction=SYSTEM_PROMPT)
+
+    model = get_working_model()
 
     # Inicializar historial de conversación
     if "messages" not in st.session_state:

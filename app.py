@@ -7,20 +7,37 @@ import streamlit as st
 # -------------------------------------------------------------------
 st.set_page_config(
     page_title="ChatbotJESS - Tutora de Ciencias Naturales",
-    page_icon="🌱",
-    layout="centered",
+    page_icon="💫",
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Encabezado con información de transparencia pedagógica
-# Estilo personalizado: Avatar más grande y estrella giratoria
+# Estilos personalizados para la barra lateral, títulos y avatares grandes
 st.markdown("""
     <style>
-    /* Agrandar el avatar de la tutora en el chat */
-    [data-testid="stChatMessageAvatar"], [data-testid="stChatMessageAvatar"] img {
-        width: 60px !important;
-        height: 60px !important;
+    /* Ocultar barra superior por defecto de Streamlit */
+    header {visibility: hidden;}
+
+    /* Estilo para la barra lateral (Sidebar) */
+    [data-testid="stSidebar"] {
+        background-color: #f0f4f9;
+        padding-top: 1rem;
+    }
+
+    /* Agrandar el avatar de la tutora en el chat a 70px */
+    [data-testid="stChatMessageAvatar"], 
+    [data-testid="stChatMessageAvatar"] img,
+    div[data-testid="stChatMessage"] div[width] {
+        width: 70px !important;
+        height: 70px !important;
+        min-width: 70px !important;
+        min-height: 70px !important;
         border-radius: 50% !important;
         object-fit: cover !important;
+    }
+
+    [data-testid="stChatMessage"] {
+        align-items: flex-start !important;
     }
 
     /* Animación para hacer girar la estrella */
@@ -39,25 +56,41 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# -------------------------------------------------------------------
+# BARRA LATERAL (SIDEBAR - IZQUIERDA CON LA TUTORA)
+# -------------------------------------------------------------------
+with st.sidebar:
+    try:
+        st.image("avatar.png", use_container_width=True)
+    except:
+        st.image("https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=500", use_container_width=True)
+    
+    st.markdown("### 🎓 ChatbotJESS")
+    st.caption("Tu tutora educativa: inteligente y cercana.")
+    st.divider()
+    st.markdown("### 📚 Áreas de aprendizaje")
+    st.markdown("🌿 **Ciencias Naturales**")
+    st.markdown("🔬 Cadenas Alimenticias y Redes Tróficas")
+
+# -------------------------------------------------------------------
+# CONTENIDO PRINCIPAL (DERECHA)
+# -------------------------------------------------------------------
+
 # Título principal con la estrella animada
 st.markdown('<h1><span class="shooting-star-icon">💫</span> ChatbotJESS: Tutora de Ciencias Naturales</h1>', unsafe_allow_html=True)
-st.caption(
-    "Asistente educativo con IA para 8.º de EGB Superior | Nivel: Cadenas Alimenticias y Redes Tróficas"
-)
+st.caption("Asistente educativo con IA para 8.º de EGB Superior | Nivel: Cadenas Alimenticias y Redes Tróficas")
 
 # Advertencia DUA y Contrato Pedagógico visible para el estudiante
 with st.expander("ℹ️ Información importante y reglas de uso (Transparencia)"):
-    st.markdown(
-        """
+    st.markdown("""
     - **Propósito:** Guiarte a pensar y descubrir las respuestas por ti mismo/a.
     - **Límite de la IA:** Este es un asistente conversacional basado en IA. **No dará respuestas directas de tus tareas** ni reemplaza a tu docente.
-    - **Privacidad:** No ingreses nombres apellidos completos, ni datos personales.
+    - **Privacidad:** No ingreses nombres, apellidos completos, ni datos personales.
     - **Verificación:** Las respuestas pueden contener errores; si persisten las dudas, consulta con tu profesor/a.
-    """
-    )
+    """)
 
 # -------------------------------------------------------------------
-# CONTRATO PEDAGÓGICO / SYSTEM PROMPT (Definido según informe Tarea 3)
+# CONTRATO PEDAGÓGICO / SYSTEM PROMPT
 # -------------------------------------------------------------------
 SYSTEM_PROMPT = """
 Eres ChatbotJESS, una tutora virtual de Ciencias Naturales para estudiantes de 8.º año de EGB Superior (12-13 años).
@@ -87,22 +120,14 @@ api_key = os.environ.get("GEMINI_API_KEY") or st.secrets.get("GEMINI_API_KEY")
 
 if not api_key:
     st.sidebar.header("🔐 Configuración de la API")
-    api_key = st.sidebar.text_input(
-        "Ingresa tu Gemini API Key aquí:", type="password"
-    )
-    st.sidebar.info(
-        "Obtén tu clave gratuita en Google AI Studio para activar a ChatbotJESS."
-    )
+    api_key = st.sidebar.text_input("Ingresa tu Gemini API Key aquí:", type="password")
+    st.sidebar.info("Obtén tu clave gratuita en Google AI Studio para activar a ChatbotJESS.")
 
 if api_key:
     genai.configure(api_key=api_key)
+    model = genai.GenerativeModel(model_name="gemini-1.5-flash", system_instruction=SYSTEM_PROMPT)
 
-    # Inicializar el modelo Gemini 1.5 Flash con el System Prompt
-    model = genai.GenerativeModel(
-        model_name="gemini-1.5-flash", system_instruction=SYSTEM_PROMPT
-    )
-
-    # Historial de conversación
+    # Inicializar historial
     if "messages" not in st.session_state:
         st.session_state.messages = [
             {
@@ -110,34 +135,25 @@ if api_key:
                 "content": "¡Hola! 👋 Soy **ChatbotJESS**, tu tutora de Ciencias Naturales. ¿Qué ejemplo o caso de cadena alimenticia estás analizando hoy?",
             }
         ]
-    # Mostrar mensajes del historial
-for message in st.session_state.messages:
-    avatar_p = "avatar.png" if message["role"] == "assistant" else None
-    with st.chat_message(message["role"], avatar=avatar_p):
-        st.markdown(message["content"])
 
-    # Mostrar mensajes en pantalla
+    # Mostrar mensajes del historial con avatar correcto
     for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
+        avatar_p = "avatar.png" if message["role"] == "assistant" else None
+        with st.chat_message(message["role"], avatar=avatar_p):
             st.markdown(message["content"])
 
     # Entrada de texto del estudiante
     if prompt := st.chat_input("Escribe tu consulta o respuesta aquí..."):
-        # Registrar y mostrar mensaje del estudiante
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Generar respuesta tutora
         with st.chat_message("assistant", avatar="avatar.png"):
             message_placeholder = st.empty()
             try:
-                # Convertir historial al formato compatible con la API
                 history_gemini = [
                     {
-                        "role": (
-                            "user" if m["role"] == "user" else "model"
-                        ),
+                        "role": "user" if m["role"] == "user" else "model",
                         "parts": [m["content"]],
                     }
                     for m in st.session_state.messages[:-1]
@@ -147,10 +163,6 @@ for message in st.session_state.messages:
                 response = chat.send_message(prompt)
 
                 message_placeholder.markdown(response.text)
-                st.session_state.messages.append(
-                    {"role": "assistant", "content": response.text}
-                )
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
             except Exception as e:
-                st.error(
-                    f"⚠️ Ocurrió un error en la conexión con la IA: {e}"
-                )
+                message_placeholder.error(f"Error al conectar con la IA: {e}")

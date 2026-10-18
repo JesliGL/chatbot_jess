@@ -12,7 +12,35 @@ st.set_page_config(
 )
 
 # Encabezado con información de transparencia pedagógica
-st.title("🌱 ChatbotJESS: Tutora de Ciencias Naturales")
+# Estilo personalizado: Avatar más grande y estrella giratoria
+st.markdown("""
+    <style>
+    /* Agrandar el avatar de la tutora en el chat */
+    [data-testid="stChatMessageAvatar"], [data-testid="stChatMessageAvatar"] img {
+        width: 60px !important;
+        height: 60px !important;
+        border-radius: 50% !important;
+        object-fit: cover !important;
+    }
+
+    /* Animación para hacer girar la estrella */
+    @keyframes spin-star {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
+    .shooting-star-icon {
+        display: inline-block;
+        font-size: 2.2rem;
+        animation: spin-star 6s linear infinite;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# Título principal con la estrella animada
+st.markdown('<h1><span class="shooting-star-icon">💫</span> ChatbotJESS: Tutora de Ciencias Naturales</h1>', unsafe_allow_html=True)
 st.caption(
     "Asistente educativo con IA para 8.º de EGB Superior | Nivel: Cadenas Alimenticias y Redes Tróficas"
 )
